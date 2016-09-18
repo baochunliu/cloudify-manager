@@ -24,7 +24,6 @@ from integration_tests.utils import do_retries
 from integration_tests.utils import (
     verify_deployment_environment_creation_complete)
 from integration_tests.utils import get_resource as resource
-from integration_tests.utils import deploy_application as deploy
 from integration_tests.utils import get_remote_storage_manager
 
 
@@ -78,9 +77,9 @@ class ExecutionsTest(AgentlessTestCase):
 
     def test_sort_executions(self):
         dsl_path = resource("dsl/basic.yaml")
-        deployment, execution_id = deploy(dsl_path)
+        deployment, execution_id = self.deploy_application(dsl_path)
         wait_for_execution_to_end(self.client.executions.get(execution_id))
-        deployment, execution_id = deploy(dsl_path)
+        deployment, execution_id = self.deploy_application(dsl_path)
         wait_for_execution_to_end(self.client.executions.get(execution_id))
         deployments_executions = self.client.executions.list(sort='created_at')
         for i in range(len(deployments_executions)-1):
@@ -97,7 +96,7 @@ class ExecutionsTest(AgentlessTestCase):
 
     def test_get_deployments_executions_with_status(self):
         dsl_path = resource("dsl/basic.yaml")
-        deployment, execution_id = deploy(dsl_path)
+        deployment, execution_id = self.deploy_application(dsl_path)
 
         def assertions():
             deployments_executions = self.client.executions.list(
@@ -161,7 +160,8 @@ class ExecutionsTest(AgentlessTestCase):
 
     def test_update_execution_status(self):
         dsl_path = resource("dsl/basic.yaml")
-        _, execution_id = deploy(dsl_path, wait_for_execution=True)
+        _, execution_id = self.deploy_application(dsl_path,
+                                                  wait_for_execution=True)
         execution = self.client.executions.get(execution_id)
         self.assertEquals(Execution.TERMINATED, execution.status)
 

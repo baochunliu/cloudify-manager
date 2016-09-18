@@ -19,7 +19,6 @@ import tempfile
 
 from integration_tests import AgentlessTestCase
 from integration_tests.utils import get_resource as resource
-from integration_tests.utils import deploy_application as deploy
 from integration_tests.utils import execute_workflow
 
 
@@ -27,7 +26,7 @@ class TestScriptMapping(AgentlessTestCase):
 
     def test_script_mapping(self):
         dsl_path = resource('dsl/test_script_mapping.yaml')
-        deployment, _ = deploy(dsl_path)
+        deployment, _ = self.deploy_application(dsl_path)
         execute_workflow('workflow', deployment.id)
 
         data = self.get_plugin_data(plugin_name='script',
@@ -37,7 +36,7 @@ class TestScriptMapping(AgentlessTestCase):
 
     def test_script_mapping_to_deployment_resource(self):
         dsl_path = resource('dsl/test_script_mapping.yaml')
-        deployment, _ = deploy(dsl_path)
+        deployment, _ = self.deploy_application(dsl_path)
 
         workflow_script_path = resource('dsl/scripts/workflows/workflow.py')
         with open(workflow_script_path, 'r') as f:

@@ -21,7 +21,6 @@ import sh
 
 from integration_tests import AgentlessTestCase
 from integration_tests.utils import get_resource as resource
-from integration_tests.utils import deploy_application as deploy
 
 
 RESOURCE_PATH = 'resources/resource.txt'
@@ -48,7 +47,7 @@ class DeploymentResourceTest(AgentlessTestCase):
                                       target=full_resource_path)
             self.execute_on_manager('chmod +r {0}'.format(full_resource_path))
 
-        deployment, _ = deploy(
+        deployment, _ = self.deploy_application(
             blueprint_path,
             blueprint_id=blueprint_id,
             deployment_id=deployment_id,

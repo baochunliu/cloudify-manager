@@ -16,7 +16,6 @@
 
 from integration_tests import AgentlessTestCase
 from integration_tests.utils import get_resource as resource
-from integration_tests.utils import deploy_application as deploy
 from integration_tests.utils import execute_workflow
 
 
@@ -612,8 +611,9 @@ class TestScaleWorkflow(AgentlessTestCase):
         }
 
     def deploy(self, resource_name, inputs=None):
-        deployment, _ = deploy(resource('dsl/{0}.yaml'.format(resource_name)),
-                               inputs=inputs)
+        deployment, _ = self.deploy_application(
+                resource('dsl/{0}.yaml'.format(resource_name)),
+                inputs=inputs)
         self.deployment_id = deployment.id
         return self.expectations()
 

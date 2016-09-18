@@ -24,7 +24,6 @@ from integration_tests.tests.test_cases import BaseTestCase
 from integration_tests import riemann
 from integration_tests import utils
 from integration_tests.utils import get_resource as resource
-from integration_tests.utils import deploy_application as deploy
 from integration_tests.utils import execute_workflow
 
 
@@ -36,7 +35,7 @@ class PoliciesTestsBase(BaseTestCase):
         riemann.reset_data_and_restart()
 
     def launch_deployment(self, yaml_file, expected_num_of_node_instances=1):
-        deployment, _ = deploy(resource(yaml_file))
+        deployment, _ = self.deploy_application(resource(yaml_file))
         self.deployment = deployment
         self.node_instances = self.client.node_instances.list(deployment.id)
         self.assertEqual(

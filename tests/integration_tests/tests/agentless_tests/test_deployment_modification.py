@@ -22,7 +22,6 @@ from cloudify_rest_client.deployment_modifications import (
 
 from integration_tests import AgentlessTestCase
 from integration_tests.utils import get_resource as resource
-from integration_tests.utils import deploy_application as deploy
 from integration_tests.utils import deploy as create_deployment
 from integration_tests.utils import execute_workflow
 
@@ -31,7 +30,7 @@ class TestDeploymentModification(AgentlessTestCase):
 
     def test_modification_operations(self):
         dsl_path = resource("dsl/deployment_modification_operations.yaml")
-        deployment, _ = deploy(dsl_path)
+        deployment, _ = self.deploy_application(dsl_path)
         deployment_id = deployment.id
         execute_workflow('deployment_modification', deployment_id)
         invocations = self.get_plugin_data(
@@ -162,9 +161,10 @@ class TestDeploymentModification(AgentlessTestCase):
         if not deployment_id:
             dsl_path = resource("dsl/deployment_modification.yaml")
             test_id = str(uuid.uuid4())
-            deployment, _ = deploy(dsl_path,
-                                   deployment_id=test_id,
-                                   blueprint_id='b_{0}'.format(test_id))
+            deployment, _ = self.deploy_application(
+                    dsl_path,
+                    deployment_id=test_id,
+                    blueprint_id='b_{0}'.format(test_id))
             deployment_id = deployment.id
 
         nodes_before_modification = {

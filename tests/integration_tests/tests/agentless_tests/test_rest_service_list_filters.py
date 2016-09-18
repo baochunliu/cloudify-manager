@@ -16,7 +16,6 @@
 from integration_tests import AgentlessTestCase
 from integration_tests import utils
 from integration_tests.utils import get_resource as resource
-from integration_tests.utils import deploy_application as deploy
 
 TEST_PACKAGE_NAME = 'cloudify-script-plugin'
 TEST_PACKAGE_VERSION = '1.2'
@@ -36,8 +35,8 @@ class TestRestServiceListFilters(AgentlessTestCase):
 
     def _put_two_deployments(self):
         dsl_path = resource("dsl/deployment_modification_operations.yaml")
-        first_deployment, _ = deploy(dsl_path)
-        sec_deployment, _ = deploy(dsl_path)
+        first_deployment, _ = self.deploy_application(dsl_path)
+        sec_deployment, _ = self.deploy_application(dsl_path)
         return first_deployment.id, first_deployment.blueprint_id,\
             sec_deployment.id, sec_deployment.blueprint_id
 

@@ -15,10 +15,8 @@
 
 from integration_tests import AgentlessTestCase
 from integration_tests.utils import get_resource as resource
-from integration_tests.utils import deploy_application
 from integration_tests.utils import deploy
 from integration_tests.utils import execute_workflow
-from integration_tests.utils import undeploy_application
 
 
 class TestAgentAliveVerification(AgentlessTestCase):
@@ -27,14 +25,15 @@ class TestAgentAliveVerification(AgentlessTestCase):
 
     def test_uninstall(self):
         deployment = deploy(resource("dsl/basic_stop_not_exists.yaml"))
-        undeploy_application(deployment.id,
-                             parameters={
-                                 'ignore_failure': True
-                             })
+        self.undeploy_application(deployment.id,
+                                  parameters={
+                                      'ignore_failure': True
+                                  })
 
     def test_install(self):
         with self.assertRaisesRegexp(RuntimeError, self.AGENT_ALIVE_FAIL):
-            deploy_application(resource("dsl/basic_start_not_exists.yaml"))
+            self.deploy_application(
+                    resource("dsl/basic_start_not_exists.yaml"))
 
     def test_not_exist_operation_workflow(self):
         self._test_custom_workflow('not_exist_operation_workflow', True)

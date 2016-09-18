@@ -25,14 +25,13 @@ from integration_tests.utils import (
     verify_deployment_environment_creation_complete)
 from integration_tests.utils import do_retries
 from integration_tests.utils import wait_for_execution_to_end
-from integration_tests.utils import deploy_application as deploy
 
 
 class TestDeploymentWorkflows(AgentlessTestCase):
 
     def test_deployment_workflows(self):
         dsl_path = resource("dsl/custom_workflow_mapping.yaml")
-        deployment, _ = deploy(dsl_path)
+        deployment, _ = self.deploy_application(dsl_path)
         deployment_id = deployment.id
         workflows = self.client.deployments.get(deployment_id).workflows
         self.assertEqual(8, len(workflows))

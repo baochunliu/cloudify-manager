@@ -154,24 +154,6 @@ def get_cfy():
                        _tee=True)
 
 
-def deploy_application(dsl_path,
-                       timeout_seconds=30,
-                       blueprint_id=None,
-                       deployment_id=None,
-                       wait_for_execution=True,
-                       inputs=None):
-    """
-    A blocking method which deploys an application from the provided dsl path.
-    """
-    return deploy_and_execute_workflow(dsl_path=dsl_path,
-                                       workflow_name='install',
-                                       timeout_seconds=timeout_seconds,
-                                       blueprint_id=blueprint_id,
-                                       deployment_id=deployment_id,
-                                       wait_for_execution=wait_for_execution,
-                                       inputs=inputs)
-
-
 def deploy(dsl_path, blueprint_id=None, deployment_id=None, inputs=None):
     client = create_rest_client()
     if not blueprint_id:
@@ -252,33 +234,6 @@ def verify_deployment_environment_creation_complete(deployment_id):
             "Found these executions instead: {0}.\nLast 100 lines for "
             "management worker log:\n{1}".format(
                 json.dumps(execs.items, indent=2), logs))
-
-
-def undeploy_application(deployment_id,
-                         timeout_seconds=240,
-                         is_delete_deployment=False,
-                         parameters=None):
-    """
-    A blocking method which undeploys an application from the provided dsl
-    path.
-    """
-    client = create_rest_client()
-    execution = client.executions.start(deployment_id,
-                                        'uninstall',
-                                        parameters=parameters)
-    wait_for_execution_to_end(execution, timeout_seconds=timeout_seconds)
-
-    if execution.error and execution.error != 'None':
-        raise RuntimeError(
-            'Workflow execution failed: {0}'.format(execution.error))
-    if is_delete_deployment:
-        delete_deployment(deployment_id)
-
-
-def delete_deployment(deployment_id, ignore_live_nodes=False):
-    client = create_rest_client()
-    return client.deployments.delete(deployment_id,
-                                     ignore_live_nodes=ignore_live_nodes)
 
 
 def is_node_started(node_id):

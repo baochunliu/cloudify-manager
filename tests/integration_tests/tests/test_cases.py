@@ -142,6 +142,54 @@ class BaseTestCase(unittest.TestCase):
         routing_key = deployment_id
         utils.publish_event(queue, routing_key, event)
 
+    @staticmethod
+    def deploy_application(dsl_path,
+                           timeout_seconds=30,
+                           blueprint_id=None,
+                           deployment_id=None,
+                           wait_for_execution=True,
+                           inputs=None):
+        """
+        A blocking method which deploys an application
+        from the provided dsl path.
+        """
+        return utils.deploy_and_execute_workflow(
+                dsl_path=dsl_path,
+                workflow_name='install',
+                timeout_seconds=timeout_seconds,
+                blueprint_id=blueprint_id,
+                deployment_id=deployment_id,
+                wait_for_execution=wait_for_execution,
+                inputs=inputs)
+
+    @staticmethod
+    def undeploy_application(deployment_id,
+                             timeout_seconds=240,
+                             is_delete_deployment=False,
+                             parameters=None):
+        """
+        A blocking method which undeploys an application from the provided dsl
+        path.
+        """
+        client = utils.create_rest_client()
+        execution = client.executions.start(deployment_id,
+                                            'uninstall',
+                                            parameters=parameters)
+        utils.wait_for_execution_to_end(execution,
+                                        timeout_seconds=timeout_seconds)
+
+        if execution.error and execution.error != 'None':
+            raise RuntimeError(
+                    'Workflow execution failed: {0}'.format(execution.error))
+        if is_delete_deployment:
+            BaseTestCase.delete_deployment(deployment_id)
+
+    @staticmethod
+    def delete_deployment(deployment_id, ignore_live_nodes=False):
+        client = utils.create_rest_client()
+        return client.deployments.delete(deployment_id,
+                                         ignore_live_nodes=ignore_live_nodes)
+
 
 class AgentlessTestCase(BaseTestCase):
 

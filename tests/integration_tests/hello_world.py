@@ -22,7 +22,7 @@ import requests
 
 
 from integration_tests import utils
-from integration_tests.utils import deploy_application as deploy
+from integration_tests.utils import deploy_and_execute_workflow as deploy
 
 _HELLO_WORLD_URL = 'https://github.com/cloudify-cosmo/{0}/archive/{1}.tar.gz'
 
@@ -43,7 +43,7 @@ class _HelloWorld(object):
     @nose.tools.nottest
     def test_hello_world(self):
         blueprint_file = self._prepare_hello_world()
-        deployment, _ = deploy(blueprint_file, timeout_seconds=120)
+        deployment, _ = deploy(blueprint_file, 'install', timeout_seconds=120)
 
         self._assert_hello_world_events(deployment.id)
         self._assert_hello_world_metric(deployment.id)
@@ -62,7 +62,9 @@ class _HelloWorld(object):
         self.test_case.assertIn('http_web_server', response.text)
 
         if not self.skip_uninstall:
-            utils.undeploy_application(deployment.id)
+            # cyclic import
+            from integration_tests.tests.test_cases import BaseTestCase
+            BaseTestCase.undeploy_application(deployment.id)
 
             # assert webserver not running
             self.test_case.assertRaises(requests.exceptions.ConnectionError,
