@@ -102,25 +102,31 @@ def _relationship(
 class SerializableBase(db.Model):
     """Abstract base class for all SQL models that allows [de]serialization
     """
-    # A list of columns that shouldn't be serialized
-    __hidden__ = ()
-
     # SQLAlchemy syntax
     __abstract__ = True
 
+    # A list of columns that shouldn't be serialized
+    _private_fields = ['tenant_id']
+
     def to_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        res = {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        for field in self._private_fields:
+            if field in res:
+                del res[field]
+        return res
 
     def to_json(self):
         return jsonpickle.encode(self.to_dict(), unpicklable=False)
 
     @classproperty
-    def fields(self):
+    def fields(cls):
         """Return the list of field names for this table
 
         Mostly for backwards compatibility in the code (that uses `fields`)
         """
-        return self.__table__.columns.keys()
+        fields = cls.__table__.columns.keys()
+        fields = [f for f in fields if f not in cls._private_fields]
+        return fields
 
     def __str__(self):
         return '<{0} id=`{1}`>'.format(self.__class__.__name__, self.id)
@@ -361,6 +367,8 @@ class DeploymentModification(SerializableBase):
 class Node(SerializableBase):
     __tablename__ = 'nodes'
 
+    _private_fields = ['tenant_id', 'storage_id']
+
     storage_id = db.Column(db.Text, primary_key=True, index=True)
     id = db.Column(db.Text, nullable=False)
     deployment_id = _foreign_key_column(Deployment)
@@ -401,21 +409,11 @@ class Node(SerializableBase):
         child_table_name='nodes'
     )
 
-    def to_dict(self):
-        node_dict = super(Node, self).to_dict()
-        # Internal field that shouldn't be sent to users
-        del node_dict['storage_id']
-        return node_dict
-
-    @classproperty
-    def fields(self):
-        fields = super(Node, self).fields
-        fields.remove('storage_id')
-        return fields
-
 
 class NodeInstance(SerializableBase):
     __tablename__ = 'node_instances'
+
+    _private_fields = ['tenant_id', 'node_storage_id']
 
     id = db.Column(db.Text, primary_key=True, index=True)
     node_storage_id = _foreign_key_column(Node, 'storage_id')
@@ -450,18 +448,6 @@ class NodeInstance(SerializableBase):
         parent_class_name='Tenant',
         child_table_name='node_instances'
     )
-
-    def to_dict(self):
-        node_instance_dict = super(NodeInstance, self).to_dict()
-        # Internal field that shouldn't be sent to users
-        del node_instance_dict['node_storage_id']
-        return node_instance_dict
-
-    @classproperty
-    def fields(self):
-        fields = super(NodeInstance, self).fields
-        fields.remove('node_storage_id')
-        return fields
 
 
 class ProviderContext(SerializableBase):
