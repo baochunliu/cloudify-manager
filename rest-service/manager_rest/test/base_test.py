@@ -27,6 +27,7 @@ from nose.tools import nottest
 from nose.plugins.attrib import attr
 from wagon.wagon import Wagon
 
+from manager_rest.storage.models import Tenant
 from manager_rest import utils, config, archiving
 from manager_rest.storage import FileServer, get_storage_manager
 from manager_rest.test.security_utils import get_admin_user, get_admin_role
@@ -165,7 +166,17 @@ class BaseServerTestCase(unittest.TestCase):
         self.app = self._get_app(server.app)
         self.client = self.create_client()
         self.sm = get_storage_manager()
+        self._init_default_tenant(server.db, server.app)
         self.initialize_provider_context()
+
+    @staticmethod
+    def _init_default_tenant(db, app):
+        default_tenant_id = 'default_tenant'
+        t = Tenant(id=default_tenant_id)
+        db.session.add(t)
+        db.session.commit()
+
+        app.config['tenant'] = default_tenant_id
 
     @staticmethod
     def _get_app(flask_app):

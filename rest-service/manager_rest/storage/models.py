@@ -132,6 +132,12 @@ class SerializableBase(db.Model):
         return str(self)
 
 
+class Tenant(SerializableBase):
+    __tablename__ = 'tenants'
+
+    id = db.Column(db.Text, primary_key=True, index=True)
+
+
 class Blueprint(SerializableBase):
     __tablename__ = 'blueprints'
 
@@ -141,6 +147,14 @@ class Blueprint(SerializableBase):
     description = db.Column(db.Text, nullable=True)
     main_file_name = db.Column(db.Text, nullable=False)
     plan = db.Column(db.PickleType, nullable=False)
+    tenant_id = _foreign_key_column(Tenant)
+
+    tenant = _relationship(
+        child_class_name='Blueprint',
+        column_name='tenant_id',
+        parent_class_name='Tenant',
+        child_table_name='blueprints'
+    )
 
 
 class Snapshot(SerializableBase):
@@ -158,6 +172,14 @@ class Snapshot(SerializableBase):
     created_at = db.Column(UTCDateTime, nullable=False, index=True)
     status = db.Column(db.Enum(*STATES, name='snapshot_status'))
     error = db.Column(db.Text, nullable=True)
+    tenant_id = _foreign_key_column(Tenant)
+
+    tenant = _relationship(
+        child_class_name='Snapshot',
+        column_name='tenant_id',
+        parent_class_name='Tenant',
+        child_table_name='snapshots'
+    )
 
 
 class Deployment(SerializableBase):
@@ -176,11 +198,19 @@ class Deployment(SerializableBase):
     description = db.Column(db.Text, nullable=True)
     outputs = db.Column(db.PickleType, nullable=True)
     permalink = db.Column(db.Text, nullable=True)
+    tenant_id = _foreign_key_column(Tenant)
 
     blueprint = _relationship(
         child_class_name='Deployment',
         column_name='blueprint_id',
         parent_class_name='Blueprint',
+        child_table_name='deployments'
+    )
+
+    tenant = _relationship(
+        child_class_name='Deployment',
+        column_name='tenant_id',
+        parent_class_name='Tenant',
         child_table_name='deployments'
     )
 
@@ -210,6 +240,7 @@ class Execution(SerializableBase):
     error = db.Column(db.Text, nullable=True)
     parameters = db.Column(db.PickleType, nullable=True)
     is_system_workflow = db.Column(db.Boolean, nullable=False)
+    tenant_id = _foreign_key_column(Tenant)
 
     blueprint = _relationship(
         child_class_name='Execution',
@@ -224,6 +255,13 @@ class Execution(SerializableBase):
         child_table_name='executions'
     )
 
+    tenant = _relationship(
+        child_class_name='Execution',
+        column_name='tenant_id',
+        parent_class_name='Tenant',
+        child_table_name='executions'
+    )
+
 
 class DeploymentUpdateStep(SerializableBase):
     __tablename__ = 'deployment_update_steps'
@@ -232,6 +270,14 @@ class DeploymentUpdateStep(SerializableBase):
     action = db.Column(db.Enum(*ACTION_TYPES, name='action_type'))
     entity_type = db.Column(db.Enum(*ENTITY_TYPES, name='entity_type'))
     entity_id = db.Column(db.Text, nullable=False)
+    tenant_id = _foreign_key_column(Tenant)
+
+    tenant = _relationship(
+        child_class_name='DeploymentUpdateStep',
+        column_name='tenant_id',
+        parent_class_name='Tenant',
+        child_table_name='deployment_update_steps'
+    )
 
 
 class DeploymentUpdate(SerializableBase):
@@ -248,6 +294,7 @@ class DeploymentUpdate(SerializableBase):
     modified_entity_ids = db.Column(db.PickleType, nullable=True)
     execution_id = _foreign_key_column(Execution, nullable=True)
     created_at = db.Column(UTCDateTime, nullable=False, index=True)
+    tenant_id = _foreign_key_column(Tenant)
 
     deployment = _relationship(
         child_class_name='DeploymentUpdate',
@@ -259,6 +306,12 @@ class DeploymentUpdate(SerializableBase):
         child_class_name='DeploymentUpdate',
         column_name='execution_id',
         parent_class_name='Execution',
+        child_table_name='deployment_updates'
+    )
+    tenant = _relationship(
+        child_class_name='DeploymentUpdate',
+        column_name='tenant_id',
+        parent_class_name='Tenant',
         child_table_name='deployment_updates'
     )
 
@@ -288,11 +341,19 @@ class DeploymentModification(SerializableBase):
     modified_nodes = db.Column(db.PickleType, nullable=True)
     node_instances = db.Column(db.PickleType, nullable=True)
     context = db.Column(db.PickleType, nullable=True)
+    tenant_id = _foreign_key_column(Tenant)
 
     deployment = _relationship(
         child_class_name='DeploymentModification',
         column_name='deployment_id',
         parent_class_name='Deployment',
+        child_table_name='deployment_modifications'
+    )
+
+    tenant = _relationship(
+        child_class_name='DeploymentModification',
+        column_name='tenant_id',
+        parent_class_name='Tenant',
         child_table_name='deployment_modifications'
     )
 
@@ -319,6 +380,7 @@ class Node(SerializableBase):
     plugins = db.Column(db.PickleType, nullable=True)
     relationships = db.Column(db.PickleType, nullable=True)
     plugins_to_install = db.Column(db.PickleType, nullable=True)
+    tenant_id = _foreign_key_column(Tenant)
 
     blueprint = _relationship(
         child_class_name='Node',
@@ -330,6 +392,12 @@ class Node(SerializableBase):
         child_class_name='Node',
         column_name='deployment_id',
         parent_class_name='Deployment',
+        child_table_name='nodes'
+    )
+    tenant = _relationship(
+        child_class_name='Node',
+        column_name='tenant_id',
+        parent_class_name='Tenant',
         child_table_name='nodes'
     )
 
@@ -361,6 +429,7 @@ class NodeInstance(SerializableBase):
     # in the code, currently, that the host will be created beforehand
     host_id = db.Column(db.Text, nullable=True)
     scaling_groups = db.Column(db.PickleType, nullable=True)
+    tenant_id = _foreign_key_column(Tenant)
 
     node = _relationship(
         child_class_name='NodeInstance',
@@ -373,6 +442,12 @@ class NodeInstance(SerializableBase):
         child_class_name='NodeInstance',
         column_name='deployment_id',
         parent_class_name='Deployment',
+        child_table_name='node_instances'
+    )
+    tenant = _relationship(
+        child_class_name='NodeInstance',
+        column_name='tenant_id',
+        parent_class_name='Tenant',
         child_table_name='node_instances'
     )
 
@@ -395,6 +470,14 @@ class ProviderContext(SerializableBase):
     id = db.Column(db.Text, primary_key=True)
     name = db.Column(db.Text, nullable=False)
     context = db.Column(db.PickleType, nullable=False)
+    tenant_id = _foreign_key_column(Tenant)
+
+    tenant = _relationship(
+        child_class_name='ProviderContext',
+        column_name='tenant_id',
+        parent_class_name='Tenant',
+        child_table_name='provider_context'
+    )
 
 
 class Plugin(SerializableBase):
@@ -413,3 +496,11 @@ class Plugin(SerializableBase):
     excluded_wheels = db.Column(db.PickleType, nullable=True)
     supported_py_versions = db.Column(db.PickleType, nullable=True)
     uploaded_at = db.Column(UTCDateTime, nullable=False, index=True)
+    tenant_id = _foreign_key_column(Tenant)
+
+    tenant = _relationship(
+        child_class_name='Plugin',
+        column_name='tenant_id',
+        parent_class_name='Tenant',
+        child_table_name='plugins'
+    )

@@ -287,6 +287,7 @@ class SQLStorageManager(object):
         :return: An instance of `model_class`
         """
         instance = self._get_instance(model_class, model)
+        instance.tenant_id = _get_current_tenant_id()
         return self._safe_add(instance)
 
     def _delete_instance_by_id(self, model_class, element_id, filters=None):
@@ -493,6 +494,7 @@ class SQLStorageManager(object):
             deployment_update_id
         )
 
+        step.tenant_id = _get_current_tenant_id()
         deployment_update.steps += [DeploymentUpdateStep(**step.to_dict())]
         return self._safe_add(deployment_update)
 
@@ -500,6 +502,7 @@ class SQLStorageManager(object):
         # The ID is always the same, and only the name changes
         instance = self._get_instance(ProviderContext, provider_context)
         instance.id = PROVIDER_CONTEXT_ID
+        instance.tenant_id = _get_current_tenant_id()
         return self._safe_add(instance)
 
     def put_deployment_modification(self, modification):
@@ -571,6 +574,10 @@ def get_storage_manager():
         current_app.config['storage_manager'] = SQLStorageManager()
         manager = current_app.config.get('storage_manager')
     return manager
+
+
+def _get_current_tenant_id():
+    return current_app.config.get('tenant')
 
 
 class ListResult(object):
